@@ -1,0 +1,41 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #222;
+  background: #fafafa;
+}
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+form.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+input,
+textarea,
+button {
+  font: inherit;
+  padding: 0.5rem;
+}
+button {
+  cursor: pointer;
+}
+.recipe-list {
+  list-style: none;
+  padding: 0;
+}
+.muted {
+  color: #777;
+}
+.error {
+  color: #b00020;
+}
