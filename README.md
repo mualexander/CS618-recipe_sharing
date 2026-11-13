@@ -32,6 +32,7 @@ backend/    Express 5 + Mongoose REST API and Socket.IO server
   tests/         node:test + supertest against an in-memory MongoDB
 frontend/   React 19 + Vite client (React Router, TanStack Query, socket.io-client)
 docker-compose.yml   mongo + backend + frontend (nginx)
+.github/workflows    CI: backend tests, frontend build, Docker smoke test
 ```
 
 ## Local development
@@ -71,6 +72,15 @@ docker login
 docker compose build
 docker compose push backend frontend
 ```
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and on pull requests:
+
+- **Backend tests**: `npm ci` and `npm test` against an in-memory MongoDB
+- **Frontend build**: `npm ci` and `npm run build`
+- **Docker**: builds both images, starts the compose stack, and checks that the API
+  reports a healthy database through nginx and that the app is served
 
 ## API
 
