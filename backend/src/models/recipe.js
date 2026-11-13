@@ -15,6 +15,20 @@ const ingredientSchema = new Schema(
   { _id: false },
 )
 
+// Denormalized counters so feeds can sort without joins. They are
+// recomputed from the source collections after each change
+// (see services/social.js), so they never drift.
+const statsSchema = new Schema(
+  {
+    likes: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
+    ratingAvg: { type: Number, default: 0 },
+    comments: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
+  },
+  { _id: false },
+)
+
 const recipeSchema = new Schema(
   {
     title: {
@@ -38,11 +52,14 @@ const recipeSchema = new Schema(
       validate: { validator: (v) => v.length <= 10, message: 'at most 10 tags' },
     },
     author: { type: Schema.Types.ObjectId, ref: 'user', required: true, index: true },
+    stats: { type: statsSchema, default: () => ({}) },
   },
   { timestamps: true },
 )
 
 recipeSchema.index({ createdAt: -1 })
+recipeSchema.index({ 'stats.likes': -1, createdAt: -1 })
+recipeSchema.index({ 'stats.ratingAvg': -1, 'stats.ratingCount': -1 })
 recipeSchema.index({ tags: 1 })
 
 // Fields a client may set directly. Everything else is server-controlled.

@@ -11,6 +11,11 @@ Course project: a MERN (MongoDB, Express, React, Node.js) real-time social recip
 - Recipe feed with search (title, ingredient, tag), tag filter, sorting, and pagination
 - User pages listing each author's recipes
 - Live feed updates over Socket.IO when anyone creates, edits, or deletes a recipe
+- Like recipes and rate them 1–5 stars (you can't rate your own); likes, average rating,
+  and comment counts show on cards and the detail page, and the feed sorts by most liked
+  or top rated
+- Comment on recipes; only a comment's author can delete it
+- Likes, ratings, and comments update live for everyone viewing the recipe or the feed
 
 ## Structure
 
@@ -77,11 +82,24 @@ All routes are under `/api/v1`. Errors are returned as `{ error, fields? }`, whe
 | GET    | `/users?q=`        | Search users                                                  |
 | GET    | `/users/:id`       | Public profile                                                |
 | PATCH  | `/users/me`        | 🔒 Update display name, bio, avatar URL                       |
-| GET    | `/recipes`         | List: `q`, `tag`, `author`, `sort` (newest, oldest, title), `page`, `limit` |
-| GET    | `/recipes/:id`     | Get one                                                       |
+| GET    | `/recipes`         | List: `q`, `tag`, `author`, `sort` (newest, oldest, title, popular, rating), `page`, `limit` |
+| GET    | `/recipes/:id`     | Get one (with a token, includes `viewer: { liked, rating }`)  |
 | POST   | `/recipes`         | 🔒 Create                                                     |
 | PATCH  | `/recipes/:id`     | 🔒 Update (author only)                                       |
-| DELETE | `/recipes/:id`     | 🔒 Delete (author only)                                       |
+| DELETE | `/recipes/:id`     | 🔒 Delete (author only; also removes its likes, ratings, comments) |
+| PUT    | `/recipes/:id/like`     | 🔒 Like (idempotent)                                     |
+| DELETE | `/recipes/:id/like`     | 🔒 Unlike                                                |
+| PUT    | `/recipes/:id/rating`   | 🔒 Rate `{ value: 1-5 }`; replaces your previous rating  |
+| DELETE | `/recipes/:id/rating`   | 🔒 Remove your rating                                    |
+| GET    | `/recipes/:id/comments` | Newest first; `before` (ISO date), `limit`               |
+| POST   | `/recipes/:id/comments` | 🔒 Add `{ body }`                                        |
+| DELETE | `/comments/:id`         | 🔒 Delete (comment author only)                          |
 
-Socket.IO events (server → client): `recipe:created`, `recipe:updated`, `recipe:deleted`.
+Socket.IO events (server → client):
+
+- Broadcast: `recipe:created`, `recipe:updated`, `recipe:deleted`, `recipe:stats`
+  (`{ recipeId, stats }` after any like, rating, or comment change)
+- Per recipe room: `comment:created`, `comment:deleted`. Join with
+  `recipe:join` / `recipe:leave` (client → server, recipe id)
+
 Clients may pass `auth: { token }` when connecting to join their private room.

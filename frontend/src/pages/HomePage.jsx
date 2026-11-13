@@ -5,7 +5,13 @@ import { listRecipes } from '../api/recipes.js'
 import { RecipeGrid, Pagination } from '../components/RecipeGrid.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
 
-const SORTS = { newest: 'Newest', oldest: 'Oldest', title: 'A–Z' }
+const SORTS = {
+  newest: 'Newest',
+  popular: 'Most liked',
+  rating: 'Top rated',
+  oldest: 'Oldest',
+  title: 'A–Z',
+}
 
 export function HomePage() {
   const { user } = useAuth()

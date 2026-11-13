@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import { Recipe, EDITABLE_RECIPE_FIELDS } from '../models/recipe.js'
+import { Like, Rating, Comment } from '../models/social.js'
 import { PUBLIC_USER_FIELDS } from '../models/user.js'
 import { HttpError, notFound, forbidden } from '../middleware/errors.js'
 import { broadcast } from '../realtime.js'
@@ -10,6 +11,8 @@ const SORTS = {
   newest: { createdAt: -1 },
   oldest: { createdAt: 1 },
   title: { title: 1 },
+  popular: { 'stats.likes': -1, createdAt: -1 },
+  rating: { 'stats.ratingAvg': -1, 'stats.ratingCount': -1, createdAt: -1 },
 }
 
 function pickEditable(data = {}) {
@@ -60,10 +63,20 @@ export async function listRecipes({
   return { items, total, page: pageNum, limit: pageSize, pages: Math.ceil(total / pageSize) }
 }
 
-export async function getRecipe(id) {
+// With a signed-in viewer, also reports whether they liked and how they rated it.
+export async function getRecipe(id, viewerId) {
   const recipe = await Recipe.findById(id).populate('author', PUBLIC_USER_FIELDS)
   if (!recipe) throw notFound('recipe')
-  return recipe
+
+  const result = recipe.toJSON()
+  if (viewerId) {
+    const [liked, rating] = await Promise.all([
+      Like.exists({ user: viewerId, recipe: id }),
+      Rating.findOne({ user: viewerId, recipe: id }).select('value'),
+    ])
+    result.viewer = { liked: Boolean(liked), rating: rating?.value ?? null }
+  }
+  return result
 }
 
 export async function createRecipe(userId, data) {
@@ -93,6 +106,11 @@ export async function updateRecipe(userId, id, data) {
 
 export async function deleteRecipe(userId, id) {
   const recipe = await loadOwned(userId, id)
-  await recipe.deleteOne()
+  await Promise.all([
+    recipe.deleteOne(),
+    Like.deleteMany({ recipe: id }),
+    Rating.deleteMany({ recipe: id }),
+    Comment.deleteMany({ recipe: id }),
+  ])
   broadcast('recipe:deleted', { recipeId: id })
 }

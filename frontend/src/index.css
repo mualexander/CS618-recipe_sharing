@@ -434,6 +434,147 @@ legend {
   white-space: pre-wrap;
 }
 
+/* --- likes, ratings, comments --- */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.social-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  margin: 1rem 0;
+  padding: 0.75rem 0;
+  border-block: 1px solid var(--border);
+}
+.like-button,
+button.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+button.like-button:hover:not(:disabled),
+a.like-button:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+button.like-button.liked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.like-button span {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.rating-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.stars span {
+  color: var(--border);
+}
+.stars span.on {
+  color: #f59e0b;
+}
+.stars span.half {
+  background: linear-gradient(90deg, #f59e0b 50%, var(--border) 50%);
+  background-clip: text;
+  color: transparent;
+}
+.rate-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.star-buttons {
+  display: inline-flex;
+}
+.star-buttons button {
+  padding: 0 0.15rem;
+  border: none;
+  background: none;
+  color: var(--border);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.star-buttons button.on {
+  color: #f59e0b;
+}
+.star-buttons:hover button {
+  color: #f59e0b;
+}
+.star-buttons button:hover ~ button {
+  color: var(--border);
+}
+.star-buttons button:hover:not(:disabled) {
+  background: none;
+}
+.card-stats {
+  display: flex;
+  gap: 0.85rem;
+  margin: 0.25rem 0 0;
+}
+.comments {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.comment-form {
+  margin-bottom: 1.5rem;
+}
+.comment-form textarea {
+  width: 100%;
+}
+.comment-form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.comment-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.comment {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.comment-meta a {
+  font-weight: 600;
+}
+.comment-body {
+  margin: 0.3rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 720px) {
   .form-grid,
   .recipe-columns {

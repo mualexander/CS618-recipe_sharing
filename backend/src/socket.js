@@ -1,4 +1,5 @@
 import { Server } from 'socket.io'
+import mongoose from 'mongoose'
 import { config } from './config.js'
 import { verifyToken } from './middleware/auth.js'
 import { attachIo, rooms } from './realtime.js'
@@ -23,6 +24,14 @@ export function createSocketServer(httpServer) {
   io.on('connection', (socket) => {
     const user = socket.data.user
     if (user) socket.join(rooms.user(user.sub))
+
+    // Detail pages join a per-recipe room to receive its comment stream.
+    socket.on('recipe:join', (recipeId) => {
+      if (mongoose.isValidObjectId(recipeId)) socket.join(rooms.recipe(recipeId))
+    })
+    socket.on('recipe:leave', (recipeId) => {
+      if (mongoose.isValidObjectId(recipeId)) socket.leave(rooms.recipe(recipeId))
+    })
   })
 
   attachIo(io)

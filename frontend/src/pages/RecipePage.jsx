@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRecipe, deleteRecipe } from '../api/recipes.js'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { RecipeImage } from '../components/RecipeImage.jsx'
+import { LikeButton, RatingControl } from '../components/SocialBar.jsx'
+import { Comments } from '../components/Comments.jsx'
+import { useRecipeRoom } from '../socket.jsx'
 
 const formatDate = (d) => new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' })
 
@@ -11,8 +14,14 @@ export function RecipePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  useRecipeRoom(id)
 
-  const { data: recipe, isPending, isError, error } = useQuery({
+  const {
+    data: recipe,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['recipe', id],
     queryFn: () => getRecipe(id),
   })
@@ -70,6 +79,11 @@ export function RecipePage() {
       </header>
       {remove.isError && <p className="error">{remove.error.message}</p>}
 
+      <div className="social-bar">
+        <LikeButton recipe={recipe} signedIn={Boolean(user)} />
+        <RatingControl recipe={recipe} signedIn={Boolean(user)} isOwner={isOwner} />
+      </div>
+
       {recipe.description && <p className="lead">{recipe.description}</p>}
       {recipe.tags?.length > 0 && (
         <ul className="tags">
@@ -99,6 +113,8 @@ export function RecipePage() {
           </section>
         )}
       </div>
+
+      <Comments recipeId={id} />
     </article>
   )
 }

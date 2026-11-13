@@ -29,10 +29,12 @@ describe('recipes', () => {
     const recipe = await t.createRecipe(alice, {
       author: bob.user._id,
       createdAt: '2000-01-01T00:00:00.000Z',
+      stats: { likes: 999 },
       tags: ['Breakfast', 'breakfast', ' Quick '],
     })
     assert.equal(recipe.author.username, 'alice')
     assert.notEqual(recipe.createdAt, '2000-01-01T00:00:00.000Z')
+    assert.equal(recipe.stats.likes, 0)
     assert.deepEqual(recipe.tags, ['breakfast', 'quick'])
   })
 

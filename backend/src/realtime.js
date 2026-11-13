@@ -9,6 +9,7 @@ export function attachIo(server) {
 
 export const rooms = {
   user: (id) => `user:${id}`,
+  recipe: (id) => `recipe:${id}`,
 }
 
 export function broadcast(event, payload) {
