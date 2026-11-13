@@ -1,27 +1,18 @@
 import { createServer } from 'node:http'
-import { Server } from 'socket.io'
+import { config, assertConfig } from './config.js'
 import { createApp } from './app.js'
+import { createSocketServer } from './socket.js'
 import { initDatabase } from './db/init.js'
 
-const PORT = process.env.PORT || 3001
-
-const io = new Server({
-  cors: { origin: process.env.CORS_ORIGIN?.split(',') ?? '*' },
-})
-
-io.on('connection', (socket) => {
-  console.info('socket connected:', socket.id)
-  socket.on('disconnect', () => console.info('socket disconnected:', socket.id))
-})
-
-const app = createApp(io)
-const server = createServer(app)
-io.attach(server)
-
 try {
-  await initDatabase(process.env.DATABASE_URL)
-  server.listen(PORT, () => {
-    console.info(`backend listening on http://localhost:${PORT}`)
+  assertConfig()
+  await initDatabase(config.databaseUrl)
+
+  const server = createServer(createApp())
+  createSocketServer(server)
+
+  server.listen(config.port, () => {
+    console.info(`backend listening on http://localhost:${config.port}`)
   })
 } catch (err) {
   console.error('failed to start:', err.message)

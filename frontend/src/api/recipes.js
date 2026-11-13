@@ -1,20 +1,7 @@
-const BASE = '/api/v1/recipes'
+import { api } from './client.js'
 
-async function request(url, options = {}) {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `request failed: ${res.status}`)
-  }
-  return res.status === 204 ? null : res.json()
-}
-
-export const getRecipes = () => request(BASE)
-
-export const createRecipe = (recipe) =>
-  request(BASE, { method: 'POST', body: JSON.stringify(recipe) })
-
-export const deleteRecipe = (id) => request(`${BASE}/${id}`, { method: 'DELETE' })
+export const listRecipes = (query) => api('/recipes', { query })
+export const getRecipe = (id) => api(`/recipes/${id}`)
+export const createRecipe = (data) => api('/recipes', { method: 'POST', body: data })
+export const updateRecipe = (id, data) => api(`/recipes/${id}`, { method: 'PATCH', body: data })
+export const deleteRecipe = (id) => api(`/recipes/${id}`, { method: 'DELETE' })

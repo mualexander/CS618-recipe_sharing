@@ -1,24 +1,45 @@
-import { useQuery } from '@tanstack/react-query'
-import { getRecipes } from './api/recipes.js'
-import { useRecipeEvents } from './useRecipeEvents.js'
-import { CreateRecipe } from './components/CreateRecipe.jsx'
-import { RecipeList } from './components/RecipeList.jsx'
+import { Routes, Route } from 'react-router'
+import { useRealtime } from './socket.js'
+import { RequireAuth } from './auth/RequireAuth.jsx'
+import { Layout } from './components/Layout.jsx'
+import { HomePage } from './pages/HomePage.jsx'
+import { RecipePage } from './pages/RecipePage.jsx'
+import { NewRecipePage } from './pages/NewRecipePage.jsx'
+import { EditRecipePage } from './pages/EditRecipePage.jsx'
+import { UserPage } from './pages/UserPage.jsx'
+import { LoginPage } from './pages/LoginPage.jsx'
+import { SignupPage } from './pages/SignupPage.jsx'
+import { NotFoundPage } from './pages/NotFoundPage.jsx'
 
 export function App() {
-  useRecipeEvents()
-  const { data: recipes, isPending, isError, error } = useQuery({
-    queryKey: ['recipes'],
-    queryFn: getRecipes,
-  })
+  useRealtime()
 
   return (
-    <main>
-      <h1>Recipe Sharing</h1>
-      <CreateRecipe />
-      <h2>Recipes</h2>
-      {isPending && <p>Loading…</p>}
-      {isError && <p className="error">{error.message}</p>}
-      {recipes && <RecipeList recipes={recipes} />}
-    </main>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path="recipes/:id" element={<RecipePage />} />
+        <Route
+          path="recipes/new"
+          element={
+            <RequireAuth>
+              <NewRecipePage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="recipes/:id/edit"
+          element={
+            <RequireAuth>
+              <EditRecipePage />
+            </RequireAuth>
+          }
+        />
+        <Route path="users/:id" element={<UserPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="signup" element={<SignupPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }

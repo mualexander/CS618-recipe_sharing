@@ -1,29 +1,29 @@
 import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
+import { config } from './config.js'
+import { errorHandler } from './middleware/errors.js'
+import { authRouter } from './routes/auth.js'
+import { usersRouter } from './routes/users.js'
 import { recipesRouter } from './routes/recipes.js'
 
-export function createApp(io) {
+export function createApp() {
   const app = express()
 
-  app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? '*' }))
-  app.use(express.json())
+  app.use(cors({ origin: config.corsOrigin }))
+  app.use(express.json({ limit: '100kb' }))
 
   app.get('/api/v1/health', (req, res) => {
-    const dbState = mongoose.connection.readyState === 1 ? 'up' : 'down'
-    res.json({ status: 'ok', database: dbState })
+    const database = mongoose.connection.readyState === 1 ? 'up' : 'down'
+    res.json({ status: 'ok', database })
   })
 
-  app.use('/api/v1/recipes', recipesRouter(io))
+  app.use('/api/v1/auth', authRouter)
+  app.use('/api/v1/users', usersRouter)
+  app.use('/api/v1/recipes', recipesRouter)
 
-  // Express 5 forwards rejected promises from async handlers here.
-  app.use((err, req, res, next) => {
-    if (err.name === 'ValidationError' || err.name === 'CastError') {
-      return res.status(400).json({ error: err.message })
-    }
-    console.error(err)
-    res.status(500).json({ error: 'internal server error' })
-  })
+  app.use('/api', (req, res) => res.status(404).json({ error: 'not found' }))
+  app.use(errorHandler)
 
   return app
 }
