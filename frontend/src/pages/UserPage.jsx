@@ -20,7 +20,11 @@ export function UserPage() {
   })
 
   if (profile.isError) {
-    return <p className="error">{profile.error.status === 404 ? 'User not found.' : profile.error.message}</p>
+    return (
+      <p className="error">
+        {profile.error.status === 404 ? 'User not found.' : profile.error.message}
+      </p>
+    )
   }
 
   const name = profile.data?.displayName || (profile.data ? `@${profile.data.username}` : '')
@@ -33,7 +37,8 @@ export function UserPage() {
           {profile.data && (
             <p className="muted">
               @{profile.data.username}
-              {recipes.data && ` · ${recipes.data.total} recipe${recipes.data.total === 1 ? '' : 's'}`}
+              {recipes.data &&
+                ` · ${recipes.data.total} recipe${recipes.data.total === 1 ? '' : 's'}`}
             </p>
           )}
           {profile.data?.bio && <p>{profile.data.bio}</p>}
@@ -43,13 +48,19 @@ export function UserPage() {
             + New recipe
           </Link>
         )}
+        {me && !isMe && profile.data && (
+          <Link to={`/messages/${id}`} className="button secondary">
+            Message
+          </Link>
+        )}
       </div>
       <RecipeGrid
         query={recipes}
         empty={
           isMe ? (
             <p>
-              You haven't shared any recipes yet. <Link to="/recipes/new">Create your first one.</Link>
+              You haven't shared any recipes yet.{' '}
+              <Link to="/recipes/new">Create your first one.</Link>
             </p>
           ) : (
             <p>No recipes yet.</p>

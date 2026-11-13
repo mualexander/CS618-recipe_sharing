@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { Recipe, EDITABLE_RECIPE_FIELDS } from '../models/recipe.js'
 import { Like, Rating, Comment } from '../models/social.js'
+import { Notification } from '../models/notification.js'
 import { PUBLIC_USER_FIELDS } from '../models/user.js'
 import { HttpError, notFound, forbidden } from '../middleware/errors.js'
 import { broadcast } from '../realtime.js'
@@ -111,6 +112,7 @@ export async function deleteRecipe(userId, id) {
     Like.deleteMany({ recipe: id }),
     Rating.deleteMany({ recipe: id }),
     Comment.deleteMany({ recipe: id }),
+    Notification.deleteMany({ recipe: id }),
   ])
   broadcast('recipe:deleted', { recipeId: id })
 }

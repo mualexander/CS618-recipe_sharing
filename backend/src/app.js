@@ -7,6 +7,8 @@ import { authRouter } from './routes/auth.js'
 import { usersRouter } from './routes/users.js'
 import { recipesRouter } from './routes/recipes.js'
 import { commentsRouter } from './routes/comments.js'
+import { messagesRouter } from './routes/messages.js'
+import { notificationsRouter } from './routes/notifications.js'
 
 export function createApp() {
   const app = express()
@@ -23,6 +25,8 @@ export function createApp() {
   app.use('/api/v1/users', usersRouter)
   app.use('/api/v1/recipes', recipesRouter)
   app.use('/api/v1/comments', commentsRouter)
+  app.use('/api/v1/messages', messagesRouter)
+  app.use('/api/v1/notifications', notificationsRouter)
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'not found' }))
   app.use(errorHandler)

@@ -4,6 +4,7 @@ import { Like, Rating, Comment } from '../models/social.js'
 import { PUBLIC_USER_FIELDS } from '../models/user.js'
 import { HttpError, notFound, forbidden } from '../middleware/errors.js'
 import { broadcast, emitTo, rooms } from '../realtime.js'
+import { notify, retract } from './notifications.js'
 
 async function requireRecipe(id) {
   if (!mongoose.isValidObjectId(id)) throw new HttpError(400, 'invalid id')
@@ -41,15 +42,8 @@ export async function refreshStats(recipeId) {
   return recipe?.stats
 }
 
-function notifyAuthor(recipe, actorId, actorName, type) {
-  if (recipe.author.equals(actorId)) return
-  emitTo(rooms.user(recipe.author), 'notification', {
-    type,
-    recipeId: recipe._id,
-    recipeTitle: recipe.title,
-    actor: { _id: actorId, username: actorName },
-  })
-}
+// Notification side effects should never fail the action that caused them.
+const quietly = (promise) => promise.catch((err) => console.error('notification failed:', err))
 
 // --- likes -----------------------------------------------------------------
 
@@ -62,13 +56,18 @@ export async function likeRecipe(user, recipeId) {
     { upsert: true },
   )
   const stats = await refreshStats(recipeId)
-  if (res.upsertedCount) notifyAuthor(recipe, user.sub, user.username, 'like')
+  if (res.upsertedCount) {
+    await quietly(
+      notify({ recipient: recipe.author, actor: user.sub, type: 'like', recipe: recipe._id }),
+    )
+  }
   return { liked: true, stats }
 }
 
 export async function unlikeRecipe(user, recipeId) {
   await requireRecipe(recipeId)
   await Like.deleteOne({ user: user.sub, recipe: recipeId })
+  await quietly(retract({ actor: user.sub, recipe: recipeId, type: 'like' }))
   return { liked: false, stats: await refreshStats(recipeId) }
 }
 
@@ -85,13 +84,22 @@ export async function rateRecipe(user, recipeId, value) {
     { upsert: true, runValidators: true, setDefaultsOnInsert: true },
   )
   const stats = await refreshStats(recipeId)
-  notifyAuthor(recipe, user.sub, user.username, 'rating')
+  await quietly(
+    notify({
+      recipient: recipe.author,
+      actor: user.sub,
+      type: 'rating',
+      recipe: recipe._id,
+      value: Number(value),
+    }),
+  )
   return { rating: Number(value), stats }
 }
 
 export async function removeRating(user, recipeId) {
   await requireRecipe(recipeId)
   await Rating.deleteOne({ user: user.sub, recipe: recipeId })
+  await quietly(retract({ actor: user.sub, recipe: recipeId, type: 'rating' }))
   return { rating: null, stats: await refreshStats(recipeId) }
 }
 
@@ -113,7 +121,16 @@ export async function addComment(user, recipeId, body) {
   await comment.populate('author', PUBLIC_USER_FIELDS)
   emitTo(rooms.recipe(recipeId), 'comment:created', { recipeId, comment })
   await refreshStats(recipeId)
-  notifyAuthor(recipe, user.sub, user.username, 'comment')
+  await quietly(
+    notify({
+      recipient: recipe.author,
+      actor: user.sub,
+      type: 'comment',
+      recipe: recipe._id,
+      comment: comment._id,
+      excerpt: comment.body.slice(0, 140),
+    }),
+  )
   return comment
 }
 
@@ -123,6 +140,7 @@ export async function deleteComment(user, commentId) {
   if (!comment) throw notFound('comment')
   if (!comment.author.equals(user.sub)) throw forbidden()
   await comment.deleteOne()
+  await quietly(retract({ comment: comment._id }))
   emitTo(rooms.recipe(comment.recipe), 'comment:deleted', {
     recipeId: comment.recipe,
     commentId,

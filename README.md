@@ -16,6 +16,11 @@ Course project: a MERN (MongoDB, Express, React, Node.js) real-time social recip
   or top rated
 - Comment on recipes; only a comment's author can delete it
 - Likes, ratings, and comments update live for everyone viewing the recipe or the feed
+- Direct messages between users: inbox with unread counts, threaded conversations,
+  read receipts, user search to start a conversation, and a Message button on profiles
+- Notifications when someone likes, rates, or comments on your recipe, stored so you
+  see them later; undoing an action (unlike, deleting a comment) removes its notification
+- Live pop-up alerts and unread badges in the nav for new messages and notifications
 
 ## Structure
 
@@ -94,6 +99,14 @@ All routes are under `/api/v1`. Errors are returned as `{ error, fields? }`, whe
 | GET    | `/recipes/:id/comments` | Newest first; `before` (ISO date), `limit`               |
 | POST   | `/recipes/:id/comments` | 🔒 Add `{ body }`                                        |
 | DELETE | `/comments/:id`         | 🔒 Delete (comment author only)                          |
+| GET    | `/messages`             | 🔒 Conversations: partner, last message, unread count    |
+| GET    | `/messages/unread`      | 🔒 `{ count }` of unread messages                        |
+| GET    | `/messages/:userId`     | 🔒 Thread with a user (oldest first); `before`, `limit`  |
+| POST   | `/messages/:userId`     | 🔒 Send `{ body }`                                       |
+| POST   | `/messages/:userId/read`| 🔒 Mark that user's messages to you as read              |
+| GET    | `/notifications`        | 🔒 Newest first; `before`, `limit`                       |
+| GET    | `/notifications/unread` | 🔒 `{ count }` of unread notifications                   |
+| POST   | `/notifications/read`   | 🔒 Mark read: `{ ids }` for specific ones, `{}` for all  |
 
 Socket.IO events (server → client):
 
@@ -102,4 +115,7 @@ Socket.IO events (server → client):
 - Per recipe room: `comment:created`, `comment:deleted`. Join with
   `recipe:join` / `recipe:leave` (client → server, recipe id)
 
-Clients may pass `auth: { token }` when connecting to join their private room.
+- Private (signed-in user's room): `message:new` (`{ message, sender }`), `message:read`,
+  `notification:new` (`{ notification }`), `notification:changed`
+
+Clients pass `auth: { token }` when connecting to join their private room.
